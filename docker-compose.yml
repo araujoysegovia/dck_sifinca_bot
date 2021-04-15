@@ -1,0 +1,57 @@
+version: "3.3"
+
+services:
+    php:
+        build:
+            context: .
+            dockerfile: dockerfile
+        volumes:
+            - ../my_new_bot:/src
+        working_dir: /src
+        networks:
+            default:
+                aliases:
+                    - php
+
+    nginx:
+        image: nginx:stable
+        volumes:
+            - ../my_new_bot:/src
+            - ./configs/site.conf:/etc/nginx/conf.d/default.conf
+        working_dir: /src
+        ports:
+            - 81:80
+        networks:
+            default:
+                    aliases:
+                        - nginx
+        depends_on:
+            - php
+        
+    swagger:
+        image: swaggerapi/swagger-ui
+        ports:
+            - 82:8080
+        volumes:
+            - ./docs/swagger:/usr/share/nginx/html/definitions
+        environment:
+            API_URL: definitions/swagger.yml
+        depends_on: 
+            - php
+
+    ngrok:
+        image: shkoliar/ngrok
+        ports:
+            - 4551:4551
+        links:
+            - nginx
+        environment:
+            - PARAMS=http nginx:80 --authtoken 1rBJDuA1TGQyYg6h6zyxT0BpMgk_5omJxr5uLcDX7t3yyQpAx
+        networks:
+            default:
+                aliases:
+                    - ngrok
+networks:
+    default:
+
+# docker exec 
